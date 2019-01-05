@@ -14,10 +14,12 @@ import PIL
 import tensorflow as tf
 from tensorflow.contrib import slim
 from lucid.modelzoo import vision_models
-from lucid.misc.io import show, save, load
 from lucid.optvis import objectives
 from lucid.optvis import render
-from lucid.misc.tfutil import create_session
+from keras.applications import ResNet50
+from keras.applications.imagenet_utils \
+	import preprocess_input, decode_predictions
+from keras.preprocessing.image import load_img, img_to_array
 from matplotlib.colors import to_rgb
 from progress.bar import IncrementalBar
 from absl import flags, app
@@ -41,6 +43,9 @@ flags.DEFINE_string('output_path', 'image.jpg', 'Hue to apply onto the image',
 def render_vis(model, objective_f, param_f=None, optimizer=None,
 	transforms=None, steps=2560, relu_gradient_override=True, output_size=1024,
 	output_path='image.jpg'):
+	"""Adapted render_vis function from the Lucid library
+	https://github.com/tensorflow/lucid/blob/master/lucid/optvis/render.py
+	"""
 
 	global _size
 
@@ -61,17 +66,24 @@ def render_vis(model, objective_f, param_f=None, optimizer=None,
 			sess.run(vis_op, feed_dict={_size: 224})
 			bar.next()
 		bar.finish()
-		print('Saving image as {}'.format(output_path))
+		print('Saving image as {}.'.format(output_path))
 		img = sess.run(t_image, feed_dict={_size: output_size})
 		PIL.Image.fromarray((img.reshape(output_size, output_size, 3) * 255)
 			.astype(np.uint8)).save(output_path)
 
 def composite_activation(x):
+	"""Activation used in CPPN (see below)
+	"""
 	x = tf.atan(x)
 	return tf.concat([x/0.67, (x*x)/0.6], -1)
 
-def image_cppn(size=None, num_output_channels=3, num_hidden_channels=24,
+def cppn(size=None, num_output_channels=3, num_hidden_channels=24,
 	num_layers=8, activation_fn=composite_activation, normalize=False):
+	"""Function that returns a Tensor output from a CPPN.
+	Adapted from CPPN Colab notebook from 
+	Mordvintsev, et al., "Differentiable Image Parameterizations", Distill, 2018.
+	See References up top.
+	"""
 	
 	global _size
 	_size = tf.placeholder(
@@ -111,22 +123,47 @@ def image_cppn(size=None, num_output_channels=3, num_hidden_channels=24,
 
 	return rgb
 
+def classify(filename):
+	print('\nLoading ResNet50 from Keras...')
+	classifier = ResNet50(weights='imagenet')
+	image = load_img(filename, target_size=(224, 224))
+	image = np.expand_dims(img_to_array(image), axis=0)
+	image = preprocess_input(image)
+	predictions = decode_predictions(classifier.predict(image))
+	print('\n------------------------------')
+	print('Predictions')
+	print('------------------------------')
+	for i, prediction in enumerate(predictions[0]):
+		label_id, label_name, confidence = prediction
+		print('{}. {}: {:.3f}%'
+			.format(i + 1, label_name, confidence * 100))
+
 def main(unused_args):
 	model = vision_models.ResnetV1_50_slim()
 	model.load_graphdef()
+	print('------------------------------')
+	print('Loaded Parameters')
+	print('------------------------------')
+	print('Chosen Class: {}'.format(FLAGS.chosen_class))
+	print('Hue         : {}'.format(FLAGS.hue_hex))
+	print('No. of Steps: {}'.format(FLAGS.steps))
+	print('Output Size : {}'.format(FLAGS.output_size))
+	print('Output Path : {}'.format(FLAGS.output_path))
+	print('------------------------------')
 	render_vis(
 		model=model,
 		objective_f=objectives.channel(
 			'resnet_v1_50/SpatialSqueeze',
 			FLAGS.chosen_class,
 		),
-		param_f=lambda:image_cppn(),
+		param_f=lambda:cppn(),
 		optimizer=tf.train.AdamOptimizer(5e-3),
 		transforms=[],
 		steps=FLAGS.steps,
 		output_size=FLAGS.output_size,
 		output_path=FLAGS.output_path,
 	)
+	classify(FLAGS.output_path)
 
 
 if __name__ == '__main__':
