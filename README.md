@@ -2,7 +2,7 @@
 
 **(art)ificial** *project01*
 
-![CYAN COLLECTION](https://raw.githubusercontent.com/greentfrapp/artificial-01-cyan-collection/master/CYAN\ COLLECTION/all.jpg)
+![CYAN COLLECTION](https://raw.githubusercontent.com/greentfrapp/artificial-01-cyan-collection/master/CYAN%20COLLECTION/all.jpg)
 
 This repository contains the script that created CYAN COLLECTION.
 
