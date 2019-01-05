@@ -4,7 +4,7 @@
 
 <img src="https://raw.githubusercontent.com/greentfrapp/artificial-01-cyan-collection/master/CYAN%20COLLECTION/all.jpg" width="250" alt="CYAN COLLECTION"></img>
 
-This repository contains the script that created CYAN COLLECTION.
+This repository contains the script that created [CYAN COLLECTION](https://github.com/greentfrapp/artificial-01-cyan-collection/tree/master/CYAN%20COLLECTION).
 
 ### Instructions
 
