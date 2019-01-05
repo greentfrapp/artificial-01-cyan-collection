@@ -1,3 +1,7 @@
+# Generated images, excluding original CYAN COLLECTION
+*.jpg
+!CYAN\ COLLECTION/*.jpg
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
