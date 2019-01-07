@@ -36,7 +36,7 @@ flags.DEFINE_integer('steps', 2560, 'Number of optimization steps',
 	short_name='steps')
 flags.DEFINE_integer('output_size', 1024, 'Size of output image',
 	short_name='size')
-flags.DEFINE_string('output_path', 'image.jpg', 'Hue to apply onto the image',
+flags.DEFINE_string('output_path', 'image.jpg', 'Path to save image',
 	short_name='path')
 
 
